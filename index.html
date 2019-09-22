@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Snake game</title>
+	<style type="text/css">
+		html,body { height:100%;background:black; display: flex; align-items: center; justify-content: center;
+
+		}
+		canvas { border: 5px solid white; }
+		#score{
+			color: white;
+		}
+		#max{
+			color: white;
+		}
+	</style>
+</head>
+<body>
+<canvas width="400" height="400" id="game"></canvas>
+<div id="score">Score: 0  </div>
+<label style="color: white"><B>HighScore: </B><label id="highScore">0</label></label>
+
+</body>
+<script type="text/javascript">
+	var canvas =document.getElementById('game');
+	var context=canvas.getContext('2d');
+	var grid=16;
+	//var count=0;
+	let dx=0,dy=0;
+	var scoreArray=[];
+	var score=document.getElementById("score");
+	score=0;
+	var pauseToggle = false;
+	if(localStorage.getItem("highScore") != null){
+    document.getElementById("highScore").innerHTML = localStorage.getItem("highScore");
+}
+	var snake=
+	{
+		x:grid*10,
+		y:grid*10,
+		cells:[{x:160,y:160},{x:144,y:160}],
+		die : false ,
+	};
+
+	var apple ={
+		x:0,
+		y:0,
+	};
+
+	function drawApple()
+	{
+		context.fillStyle = "red";
+		context.fillRect(apple.x,apple.y,grid-1,grid-1);
+	}
+	drawApple();
+	function setAppleCoordinate()
+	{
+		apple.x= Math.floor(Math.random() * 25) * grid;
+		 apple.y= Math.floor(Math.random() * 25) * grid;
+		  if( checkAppleIsOnSnake() ){
+    setAppleCoordinate();
+  }
+	}
+	function checkAppleIsOnSnake(){
+   for(let i = 0 ; i < snake.cells.length ; i++){
+    if( apple.x == snake.cells[i].x && apple.y == snake.cells[i].y){
+      return true ;
+    }
+  }
+}
+	function drawSnake()
+	{
+		var color;
+		//context.fillStyle='green';
+		for(let i=0 ; i<snake.cells.length ; i++){
+			 if (i == 0)
+            color = "lightgreen";
+        else if (i == snake.cells.length-1) 
+            color = "darkgreen";
+        else
+        	 color = "green";
+        context.fillStyle = color;
+    context.fillRect(snake.cells[i].x, snake.cells[i].y, grid-1, grid-1);
+}
+	}
+	drawSnake();
+	function checkSnakeBiteItself(){
+  for(let i = 4 ; i < snake.cells.length ; i++){
+    if( snake.x == snake.cells[i].x && snake.y == snake.cells[i].y){
+      saveHighScore();
+      snake.die = true ;
+    }
+  }
+}
+
+	function moveSnake(dx,dy)
+	{
+
+		snake.x +=dx;
+		snake.y +=dy;
+		//console.log(snake.x);
+		if(snake.x==400)
+		{
+			alert("Game Over");
+			saveHighScore();
+			document.location.reload();
+		}
+		else if(snake.y==400)
+		{
+			alert("Game Over");
+			
+			document.location.reload();
+			
+		}
+		else if(snake.x== -16)
+		{
+			alert("Game Over");
+			saveHighScore();
+			document.location.reload();
+			
+		}
+		else if(snake.y== -16)
+		{
+			alert("Game Over");
+			saveHighScore();
+			document.location.reload();
+		}
+		if(snake.x==apple.x && snake.y==apple.y)
+		{
+			snake.cells.unshift({x: snake.x , y:snake.y});
+			setAppleCoordinate();
+			score++;
+			console.log(score);
+			 document.getElementById("score").innerHTML = "Score: " + score;
+
+			drawApple();
+		}
+		snake.cells.unshift({x: snake.x , y:snake.y});
+		snake.cells.pop();
+		drawSnake();
+	}
+	var d;
+	document.addEventListener('keydown',function(e)
+	{
+		
+		if(e.keyCode==37 && d != "RIGHT")
+		{
+		dx=-grid;
+		dy=0;
+		 d = "LEFT";
+	}
+	else if(e.keyCode==38 && d != "DOWN")
+	{
+		dy= -grid;
+		dx=0;
+		d = "UP";
+	}
+	else if(e.keyCode==39 && d != "LEFT")
+	{
+		dx=grid;
+		dy=0;
+		 d = "RIGHT";
+	}
+	else if(e.keyCode==40 && d != "UP")
+	{
+		dy=grid;
+		dx=0;
+		d = "DOWN";
+	}
+	context.clearRect(0, 0, canvas.width,canvas.height);
+	moveSnake(dx,dy);
+	checkSnakeBiteItself(); 
+	if(snake.die){
+    alert("Game Over");
+			document.location.reload();
+    return ;
+  }
+	drawApple();
+	});
+	document.addEventListener('keydown', function (e) {
+    if(e.keyCode == 80){
+        if(pauseToggle == false)
+            pauseToggle = true;
+        else if(pauseToggle == true)
+            pauseToggle = false;
+    }
+    if (snake.x >= 0 && snake.x <= canvas.width-10 && snake.y >= 0 && snake.y <= canvas.height-10 && pauseToggle != true) {
+        if (e.keyCode == 37 && dx != grid) {
+            dx = -grid;
+            dy = 0;
+        }
+        else if (e.keyCode == 38 && dy != grid) {
+            dx = 0;
+            dy = -grid;
+        }
+        else if (e.keyCode == 39 && dx != -grid) {
+            dx = grid;
+            dy = 0;
+        }
+        else if (e.keyCode == 40 && dy != -grid) {
+            dx = 0;
+            dy = grid;
+    }
+}
+});
+	
+	function saveHighScore() {
+    if (localStorage.getItem("highScore") == null) {
+        localStorage.setItem("highScore", score);
+    }
+    else if (localStorage.getItem("highScore") < score) {
+        localStorage.setItem("highScore", score);
+    }
+}
+setInterval(function(){
+	context.clearRect(0,0,canvas.width,canvas.height);
+	moveSnake(dx,dy);
+	drawSnake();
+	drawApple();
+},150);
+</script>
+</html>
